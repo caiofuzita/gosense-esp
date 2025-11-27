@@ -1,98 +1,72 @@
-ESP32-CAM Web Server com WiFiManager
-Este projeto implementa um servidor de streaming de vídeo utilizando o módulo ESP32-CAM (Modelo AI-Thinker). O diferencial deste código é a integração com o WiFiManager, que permite conectar a câmera a diferentes redes WiFi sem a necessidade de reprogramar o código (hardcoding) com o SSID e a senha.
+# ESP32-CAM Web Server com WiFiManager e mDNS
 
-Além disso, o projeto utiliza mDNS, permitindo acessar a câmera através de uma URL amigável (http://esp32cam.local) em vez de depender do endereço IP.
+Este projeto implementa um servidor de streaming de vídeo utilizando o módulo **ESP32-CAM (Modelo AI-Thinker)**. 
 
-📋 Funcionalidades
-Streaming de Vídeo: Transmissão de vídeo via protocolo HTTP.
+O grande diferencial deste código é a integração com o **WiFiManager**, que elimina a necessidade de gravar o nome da rede (SSID) e a senha diretamente no código (hardcoding). Se a câmera não conseguir se conectar, ela cria automaticamente um Ponto de Acesso para que você configure a rede via celular ou PC.
 
-Gerenciador de WiFi (Captive Portal): Se o ESP32 não conseguir conectar a uma rede conhecida, ele cria um Ponto de Acesso (AP) para configuração.
+Além disso, utiliza **mDNS**, permitindo o acesso via URL amigável (`http://esp32cam.local`) sem precisar descobrir o IP.
 
-mDNS: Acesso facilitado via http://esp32cam.local.
+## 📋 Funcionalidades
 
-Configuração Automática de Qualidade: Ajusta a resolução e o buffer baseada na presença de PSRAM.
+- **Streaming de Vídeo:** Servidor HTTP dedicado para transmissão de imagens.
+- **WiFiManager (Captive Portal):** Cria uma rede `ConfigurarCameraESP32` para configuração inicial de WiFi sem reprogramar a placa.
+- **mDNS:** Acesso facilitado via endereço `http://esp32cam.local`.
+- **Ajuste Automático:** Detecta se há PSRAM disponível para ajustar a qualidade e resolução (UXGA vs SVGA) automaticamente.
 
-🛠️ Hardware Necessário
-Módulo ESP32-CAM (Modelo AI-Thinker).
+## 🛠️ Hardware Necessário
 
-Módulo Conversor USB-TTL (FTDI) para programação.
+- 1x Módulo ESP32-CAM (Modelo AI-Thinker).
+- 1x Conversor USB-TTL (FTDI) para programação.
+- Fonte de alimentação 5V estável.
 
-Jumpers.
+## 💻 Dependências de Software
 
-Fonte de alimentação 5V (recomendado) ou 3.3V.
+Para compilar este código na **Arduino IDE**, certifique-se de ter instalado:
 
-💻 Dependências de Software
-Para compilar este código na Arduino IDE, você precisará das seguintes bibliotecas e pacotes:
+1. **Pacote de Placas ESP32:**
+   - Adicione no *Preferences*: `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
+   - Instale via *Boards Manager*.
 
-Pacote ESP32:
+2. **Biblioteca WiFiManager:**
+   - Autor: *tzapu*
+   - Instale via *Library Manager* (Sketch > Include Library > Manage Libraries).
 
-Vá em File > Preferences e adicione a URL no Gerenciador de Placas: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+3. **Arquivo Auxiliar:**
+   - O arquivo `camera_pins.h` deve estar na mesma pasta do seu sketch (`.ino`) com as definições dos pinos do modelo AI-Thinker.
 
-Vá em Tools > Board > Boards Manager, busque por esp32 e instale (por Espressif Systems).
+## ⚙️ Configuração da IDE
 
-Biblioteca WiFiManager:
+Ao carregar o código, utilize as seguintes configurações em **Tools**:
 
-Vá em Sketch > Include Library > Manage Libraries.
+- **Board:** AI Thinker ESP32-CAM
+- **CPU Frequency:** 240MHz (WiFi/BT)
+- **Flash Frequency:** 80MHz
+- **Partition Scheme:** Huge APP (3MB No OTA/1MB SPIFFS) *(Essencial para evitar erros de espaço)*.
 
-Busque por WiFiManager (por tzapu) e instale a versão mais recente.
+## 🚀 Como Usar
 
-Nota: Certifique-se de que o arquivo camera_pins.h está presente na mesma pasta do seu projeto (.ino), contendo as definições de pinos para o modelo AI-Thinker.
+### 1. Upload do Código
+1. Conecte o **GPIO 0** ao **GND** no ESP32-CAM.
+2. Conecte o adaptador FTDI e faça o upload.
+3. Após o upload, **remova a conexão entre GPIO 0 e GND**.
+4. Pressione o botão **RESET** na placa.
 
-🚀 Como Instalar e Carregar
-Conexão para Upload:
+### 2. Primeiro Acesso (Configuração WiFi)
+Como não há senha gravada, o ESP32 entrará em modo de configuração:
 
-Conecte o pino GPIO 0 ao GND (isso coloca o ESP32 em modo de flash).
+1. No seu celular ou PC, procure por uma rede WiFi chamada: `ConfigurarCameraESP32`.
+2. Conecte-se a ela. Uma página deve abrir automaticamente (se não, acesse `192.168.4.1` no navegador).
+3. Clique em **Configure WiFi**, selecione sua rede local e insira a senha.
+4. O ESP32 irá salvar, reiniciar e conectar automaticamente à sua rede.
 
-Conecte o conversor USB-TTL aos pinos U0R (RX) e U0T (TX).
+### 3. Acessando a Câmera
+Após a reinicialização, verifique o Monitor Serial ou simplesmente acesse no navegador:
 
-Configuração da IDE:
+> **http://esp32cam.local**
 
-Board: AI Thinker ESP32-CAM
+Caso o mDNS não funcione no seu dispositivo (comum em alguns Androids), verifique o IP no Monitor Serial (ex: `192.168.1.15`).
 
-CPU Frequency: 240MHz (WiFi/BT)
+## ⚠️ Solução de Problemas
 
-Flash Frequency: 80MHz
-
-Partition Scheme: Huge APP (3MB No OTA/1MB SPIFFS) - Importante para caber o código da câmera.
-
-Upload:
-
-Clique em "Upload" na Arduino IDE.
-
-Assim que terminar ("Done uploading"), remova o jumper entre GPIO 0 e GND.
-
-Pressione o botão de RESET no módulo.
-
-📡 Como Usar (Primeiro Acesso)
-Como não há senha de WiFi gravada no código, siga os passos abaixo na primeira vez que ligar:
-
-Modo de Configuração:
-
-Abra o Monitor Serial (Baud Rate 115200) para acompanhar o status.
-
-O ESP32 tentará conectar. Se falhar, criará uma rede WiFi chamada: ConfigurarCameraESP32
-
-Conectando ao Portal:
-
-Use seu celular ou PC para conectar na rede WiFi ConfigurarCameraESP32.
-
-Uma janela deve abrir automaticamente (Captive Portal). Se não abrir, acesse 192.168.4.1 no navegador.
-
-Clique em Configure WiFi, selecione sua rede doméstica e digite a senha.
-
-Acessando a Câmera:
-
-O ESP32 irá reiniciar e conectar à sua rede.
-
-No navegador do seu PC/Celular (conectado à mesma rede), acesse:
-
-URL: http://esp32cam.local
-
-Alternativa: Verifique o IP impresso no Monitor Serial (ex: http://192.168.1.15).
-
-⚠️ Solução de Problemas Comuns
-Erro "Brownout detector was triggered": Geralmente causado por cabo USB de má qualidade ou porta USB que não fornece corrente suficiente. Tente usar uma fonte externa de 5V.
-
-Falha na inicialização da câmera (0x...): Verifique se o módulo da câmera está bem encaixado no slot.
-
-mDNS não funciona (não abre .local): O mDNS funciona nativamente no Mac, iPhone e Windows 10/11 (com Bonjour). Em alguns Androids ou Windows antigos, pode ser necessário usar o endereço IP direto.
+- **Erro "Brownout detector was triggered":** A fonte de energia é insuficiente. O WiFi e a Câmera consomem picos de energia. Troque o cabo USB ou use uma fonte externa de 5V/2A.
+- **Falha na Câmera (Erro 0x...):** Verifique se o cabo flat da câmera está bem encaixado e travado no conector.
